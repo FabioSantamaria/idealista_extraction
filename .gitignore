@@ -1,0 +1,55 @@
+# Python specific
+*.pyc
+__pycache__/
+.Python/
+venv/
+.env/
+env/
+.pytest_cache/
+.mypy_cache/
+.pytype/
+.ruff_cache/
+
+# Streamlit specific
+.streamlit/cache/       # Streamlit's caching directory
+.streamlit/local_data/ # Local data created by Streamlit sessions (e.g., uploaded files)
+
+# IDE specific files
+.vscode/                # VS Code workspace files
+.idea/                  # IntelliJ/PyCharm IDEA files
+*.iml
+*.iws
+*.ipr
+
+# Operating System specific files
+.DS_Store               # macOS specific files
+Thumbs.db               # Windows thumbnail cache
+desktop.ini             # Windows system file
+ehthumbs.db
+.Trash-* # macOS trash files
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*~                      # Backup files (e.g., from text editors)
+
+# Distribution and build artifacts
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Data and output directories (if they are generated or too large)
+# Uncomment or add as needed based on your project structure
+# data/
+# output/
+# models/
+# reports/
+
+# Jupyter Notebook specific (if used)
+.ipynb_checkpoints/
+
+# Database files (if local, e.g., SQLite)
+*.db
+*.sqlite3

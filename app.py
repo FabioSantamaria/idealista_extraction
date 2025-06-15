@@ -224,10 +224,43 @@ def display_results():
     # Display the data table
     st.dataframe(display_data, use_container_width=True, height=400)
     
+    # Data management section
+    st.subheader("🔧 Data Management")
+    
+    col1, col2, col3 = st.columns(3)
+        
+    with col1:
+        # Show duplicate info
+        total_rows = len(st.session_state.processed_data)
+        if total_rows > 0:
+            # Check for duplicates based on source_url or filename
+            duplicate_columns = []
+            if 'source_url' in st.session_state.processed_data.columns:
+                duplicate_columns.append('source_url')
+            elif 'filename' in st.session_state.processed_data.columns:
+                duplicate_columns.append('filename')
+            
+            if duplicate_columns:
+                duplicates = st.session_state.processed_data.duplicated(subset=duplicate_columns, keep=False).sum()
+                st.metric("Duplicate Rows", duplicates)
+
+    with col2:
+        # Remove duplicates button
+        if st.button("🔄 Remove Duplicates", use_container_width=True):
+            remove_duplicates()
+
+    with col3:
+        # Clear data button
+        if st.button("🗑️ Clear All Data", use_container_width=True):
+            st.session_state.processed_data = pd.DataFrame()
+            st.rerun()
+    
+
+
     # Download section
     st.subheader("💾 Download Data")
     
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     
     with col1:
         # CSV download
@@ -257,12 +290,6 @@ def display_results():
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True
         )
-    
-    with col3:
-        # Clear data button
-        if st.button("🗑️ Clear All Data", use_container_width=True):
-            st.session_state.processed_data = pd.DataFrame()
-            st.rerun()
     
     # Show summary statistics
     if len(filtered_data) > 0:
@@ -311,6 +338,49 @@ def display_results():
                             st.metric(f"Min {price_col}", f"{numeric_prices.min():.0f}")
                         with col4:
                             st.metric(f"Max {price_col}", f"{numeric_prices.max():.0f}")
+
+def remove_duplicates():
+    """Remove duplicate rows from the processed data."""
+    if st.session_state.processed_data.empty:
+        st.warning("No data to process for duplicate removal.")
+        return
+    
+    original_count = len(st.session_state.processed_data)
+    
+    # Define columns to check for duplicates (in order of preference)
+    duplicate_check_columns = []
+    
+    # First priority: source_url (most reliable identifier)
+    if 'source_url' in st.session_state.processed_data.columns:
+        duplicate_check_columns = ['source_url']
+    # Second priority: filename (if no source_url)
+    elif 'filename' in st.session_state.processed_data.columns:
+        duplicate_check_columns = ['filename']
+    # Third priority: combination of key fields
+    else:
+        potential_columns = ['price', 'location', 'property_type', 'rooms', 'bathrooms', 'size_built_sqm']
+        available_columns = [col for col in potential_columns if col in st.session_state.processed_data.columns]
+        if available_columns:
+            duplicate_check_columns = available_columns[:3]  # Use first 3 available columns
+    
+    if not duplicate_check_columns:
+        # Last resort: check all columns
+        st.session_state.processed_data = st.session_state.processed_data.drop_duplicates()
+    else:
+        # Remove duplicates based on selected columns, keeping the first occurrence
+        st.session_state.processed_data = st.session_state.processed_data.drop_duplicates(
+            subset=duplicate_check_columns, 
+            keep='first'
+        ).reset_index(drop=True)
+    
+    new_count = len(st.session_state.processed_data)
+    removed_count = original_count - new_count
+    
+    if removed_count > 0:
+        st.success(f"✅ Removed {removed_count} duplicate row(s). {new_count} unique records remaining.")
+        st.rerun()
+    else:
+        st.info("ℹ️ No duplicate rows found.")
 
 if __name__ == "__main__":
     main()
